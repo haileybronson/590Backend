@@ -13,7 +13,9 @@ class Recipe extends Model
     protected $fillable = [
         'name',
         'description',
-        'recipe_cover_picture'
+        'recipe_cover_picture',
+        'inventory_total_qty',
+        'checked_qty'
     ];
 
     protected $hidden = [

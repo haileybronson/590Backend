@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
+use Illuminate\Database\Seeder;
 use App\Models\Recipe;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,32 +19,50 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
         ]);
 
-        // Seed recipes with S3 images
+        // Create test user
+        User::create([
+            'name' => 'Test User',
+            'email' => 'test@test.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+        ]);
+
+        // Create recipes with original images
         $recipes = [
             [
-                'name' => 'Delicious Donuts',
-                'description' => 'Sweet and fluffy homemade donuts perfect for breakfast or dessert',
-                'recipe_cover_picture' => 'images/donuts.jpg'
+                'name' => 'Homemade Pizza',
+                'description' => 'Delicious pizza with fresh toppings',
+                'recipe_cover_picture' => 'images/pizza.jpg',
+                'inventory_total_qty' => 1,
+                'checked_qty' => 0
             ],
             [
-                'name' => 'Classic Pasta',
-                'description' => 'Traditional Italian pasta dish with rich tomato sauce',
-                'recipe_cover_picture' => 'images/pasta.png'
+                'name' => 'Garden Salad',
+                'description' => 'Fresh and healthy garden salad',
+                'recipe_cover_picture' => 'images/salad.jpg',
+                'inventory_total_qty' => 1,
+                'checked_qty' => 0
             ],
             [
-                'name' => 'Pizza Margherita',
-                'description' => 'Authentic Neapolitan pizza with fresh basil and mozzarella',
-                'recipe_cover_picture' => 'images/pizza.jpg'
+                'name' => 'Chocolate Donuts',
+                'description' => 'Sweet and fluffy chocolate donuts',
+                'recipe_cover_picture' => 'images/donuts.jpg',
+                'inventory_total_qty' => 1,
+                'checked_qty' => 0
             ],
             [
-                'name' => 'Fresh Garden Salad',
-                'description' => 'Healthy and crisp salad with seasonal vegetables',
-                'recipe_cover_picture' => 'images/salad.jpg'
+                'name' => 'Grilled Chicken',
+                'description' => 'Perfectly grilled chicken with herbs',
+                'recipe_cover_picture' => 'images/chicken.jpg',
+                'inventory_total_qty' => 1,
+                'checked_qty' => 0
             ],
             [
-                'name' => 'Gourmet Sandwich',
-                'description' => 'Artisanal sandwich with premium ingredients and fresh bread',
-                'recipe_cover_picture' => 'images/sandwich.png'
+                'name' => 'Fruit Smoothie',
+                'description' => 'Refreshing fruit smoothie blend',
+                'recipe_cover_picture' => 'images/smoothie.jpg',
+                'inventory_total_qty' => 1,
+                'checked_qty' => 0
             ]
         ];
 

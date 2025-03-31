@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->text('description');
             $table->string('recipe_cover_picture')->nullable();
+            $table->integer('inventory_total_qty')->default(1);
+            $table->integer('checked_qty')->default(0);
             $table->timestamps();
             $table->softDeletes();
         });
