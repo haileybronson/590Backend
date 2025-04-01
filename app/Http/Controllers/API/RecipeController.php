@@ -33,22 +33,42 @@ class RecipeController extends BaseController
         try {
             \Log::info('Received recipe creation request', [
                 'has_file' => $request->hasFile('recipe_cover_picture'),
-                'all_data' => $request->all()
+                'all_data' => $request->all(),
+                'files' => $request->allFiles(),
+                'content_type' => $request->header('Content-Type'),
+                'headers' => $request->headers->all()
             ]);
 
             $validator = \Validator::make($request->all(), [
                 'name' => 'required|string',
                 'description' => 'required|string',
-                'recipe_cover_picture' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                'recipe_cover_picture' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:2048'
             ]);
 
             if ($validator->fails()) {
-                \Log::error('Validation failed', ['errors' => $validator->errors()]);
+                \Log::error('Validation failed', [
+                    'errors' => $validator->errors(),
+                    'request_data' => $request->all(),
+                    'files' => $request->allFiles(),
+                    'file_validation' => [
+                        'has_file' => $request->hasFile('recipe_cover_picture'),
+                        'is_valid' => $request->file('recipe_cover_picture') ? $request->file('recipe_cover_picture')->isValid() : false,
+                        'original_name' => $request->file('recipe_cover_picture') ? $request->file('recipe_cover_picture')->getClientOriginalName() : null,
+                        'mime_type' => $request->file('recipe_cover_picture') ? $request->file('recipe_cover_picture')->getMimeType() : null,
+                        'extension' => $request->file('recipe_cover_picture') ? $request->file('recipe_cover_picture')->getClientOriginalExtension() : null
+                    ]
+                ]);
                 return $this->sendError('Validation Error.', $validator->errors(), 422);
             }
 
             if (!$request->hasFile('recipe_cover_picture')) {
-                \Log::error('No image file in request');
+                \Log::error('No image file in request', [
+                    'files' => $request->allFiles(),
+                    'has_file' => $request->hasFile('recipe_cover_picture'),
+                    'content_type' => $request->header('Content-Type'),
+                    'post_data' => $request->post(),
+                    'request_data' => $request->all()
+                ]);
                 return $this->sendError('No image file found in request', [], 400);
             }
 
@@ -56,13 +76,35 @@ class RecipeController extends BaseController
             \Log::info('Image file details', [
                 'original_name' => $file->getClientOriginalName(),
                 'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize()
+                'size' => $file->getSize(),
+                'error' => $file->getError(),
+                'extension' => $file->getClientOriginalExtension(),
+                'path' => $file->getPath(),
+                'real_path' => $file->getRealPath(),
+                'is_valid' => $file->isValid(),
+                'validation_error' => $file->getError()
             ]);
+
+            // Validate file extension manually as backup
+            $extension = strtolower($file->getClientOriginalExtension());
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg'];
+
+            if (!in_array($extension, $allowedExtensions)) {
+                \Log::error('Invalid file extension', [
+                    'extension' => $extension,
+                    'allowed' => $allowedExtensions
+                ]);
+                return $this->sendError('Invalid file type. Allowed types: ' . implode(', ', $allowedExtensions), [], 422);
+            }
 
             $filename = time() . '_' . $file->getClientOriginalName();
 
             // Store the file in S3
             $path = $file->storeAs('images', $filename, 's3');
+            \Log::info('File stored in S3', [
+                'path' => $path,
+                'filename' => $filename
+            ]);
 
             if (!$path) {
                 throw new \Exception('Failed to upload image to S3');
