@@ -42,7 +42,7 @@ class RecipeController extends BaseController
             $validator = \Validator::make($request->all(), [
                 'name' => 'required|string',
                 'description' => 'required|string',
-                'recipe_cover_picture' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                'recipe_cover_picture' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:10240'
             ]);
 
             if ($validator->fails()) {
@@ -140,7 +140,7 @@ class RecipeController extends BaseController
         $request->validate([
             'name' => 'required|string',
             'description' => 'required|string',
-            'recipe_cover_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+            'recipe_cover_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240'
         ]);
 
         try {
@@ -190,6 +190,11 @@ class RecipeController extends BaseController
     {
         try {
             $recipe = Recipe::findOrFail($id);
+
+            // Check if recipe is checked out
+            if ($recipe->checked_qty > 0) {
+                return $this->sendError('Cannot delete recipe while it is in use', [], 400);
+            }
 
             // Delete image from S3 if it exists
             if ($recipe->recipe_cover_picture) {
