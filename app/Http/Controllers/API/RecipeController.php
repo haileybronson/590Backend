@@ -193,13 +193,24 @@ class RecipeController extends BaseController
 
             // Delete image from S3 if it exists
             if ($recipe->recipe_cover_picture) {
+                \Log::info('Deleting image from S3', [
+                    'path' => $recipe->recipe_cover_picture
+                ]);
                 Storage::disk('s3')->delete($recipe->recipe_cover_picture);
             }
 
+            // Delete the recipe from the database
             $recipe->delete();
+            \Log::info('Recipe deleted successfully', [
+                'recipe_id' => $id
+            ]);
 
             return $this->sendResponse([], 'Recipe deleted successfully.');
         } catch (\Exception $e) {
+            \Log::error('Failed to delete recipe: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->sendError('Failed to delete recipe: ' . $e->getMessage(), [], 500);
         }
     }
@@ -213,7 +224,9 @@ class RecipeController extends BaseController
                 return $this->sendError('Recipe is out of stock', [], 400);
             }
 
+            // Increment checked_qty and decrement inventory_total_qty
             $recipe->checked_qty += 1;
+            $recipe->inventory_total_qty -= 1;
             $recipe->save();
 
             // Add S3 URL for response
@@ -221,6 +234,10 @@ class RecipeController extends BaseController
 
             return $this->sendResponse($recipe, 'Recipe checked out successfully.');
         } catch (\Exception $e) {
+            \Log::error('Failed to checkout recipe: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->sendError('Failed to checkout recipe: ' . $e->getMessage(), [], 500);
         }
     }
@@ -234,7 +251,9 @@ class RecipeController extends BaseController
                 return $this->sendError('Recipe is not checked out', [], 400);
             }
 
+            // Decrement checked_qty and increment inventory_total_qty
             $recipe->checked_qty -= 1;
+            $recipe->inventory_total_qty += 1;
             $recipe->save();
 
             // Add S3 URL for response
@@ -242,6 +261,10 @@ class RecipeController extends BaseController
 
             return $this->sendResponse($recipe, 'Recipe returned successfully.');
         } catch (\Exception $e) {
+            \Log::error('Failed to return recipe: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->sendError('Failed to return recipe: ' . $e->getMessage(), [], 500);
         }
     }
