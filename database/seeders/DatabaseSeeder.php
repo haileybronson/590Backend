@@ -27,40 +27,40 @@ class DatabaseSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        // Create recipes with original images
+        // Create recipes with the exact image names from S3
         $recipes = [
             [
-                'name' => 'Homemade Pizza',
-                'description' => 'Delicious pizza with fresh toppings',
-                'recipe_cover_picture' => 'images/pizza.jpg',
-                'inventory_total_qty' => 1,
-                'checked_qty' => 0
-            ],
-            [
-                'name' => 'Garden Salad',
-                'description' => 'Fresh and healthy garden salad',
-                'recipe_cover_picture' => 'images/salad.jpg',
-                'inventory_total_qty' => 1,
-                'checked_qty' => 0
-            ],
-            [
                 'name' => 'Chocolate Donuts',
-                'description' => 'Sweet and fluffy chocolate donuts',
+                'description' => 'Sweet and fluffy chocolate donuts perfect for breakfast or dessert',
                 'recipe_cover_picture' => 'images/donuts.jpg',
                 'inventory_total_qty' => 1,
                 'checked_qty' => 0
             ],
             [
-                'name' => 'Grilled Chicken',
-                'description' => 'Perfectly grilled chicken with herbs',
-                'recipe_cover_picture' => 'images/chicken.jpg',
+                'name' => 'Classic Pasta',
+                'description' => 'Traditional Italian pasta dish with rich tomato sauce',
+                'recipe_cover_picture' => 'images/pasta.png',
                 'inventory_total_qty' => 1,
                 'checked_qty' => 0
             ],
             [
-                'name' => 'Fruit Smoothie',
-                'description' => 'Refreshing fruit smoothie blend',
-                'recipe_cover_picture' => 'images/smoothie.jpg',
+                'name' => 'Pizza Margherita',
+                'description' => 'Authentic Neapolitan pizza with fresh basil and mozzarella',
+                'recipe_cover_picture' => 'images/pizza.jpg',
+                'inventory_total_qty' => 1,
+                'checked_qty' => 0
+            ],
+            [
+                'name' => 'Fresh Garden Salad',
+                'description' => 'Healthy and crisp salad with seasonal vegetables',
+                'recipe_cover_picture' => 'images/salad.jpg',
+                'inventory_total_qty' => 1,
+                'checked_qty' => 0
+            ],
+            [
+                'name' => 'Gourmet Sandwich',
+                'description' => 'Artisanal sandwich with premium ingredients and fresh bread',
+                'recipe_cover_picture' => 'images/sandwich.png',
                 'inventory_total_qty' => 1,
                 'checked_qty' => 0
             ]
