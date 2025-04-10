@@ -24,8 +24,13 @@ class UserSeeder extends Seeder
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
             ]
-
         ];
-        User::insert($users);
+
+        // Check if user already exists before inserting
+        foreach ($users as $userData) {
+            if (!User::where('email', $userData['email'])->exists()) {
+                User::create($userData);
+            }
+        }
     }
 }

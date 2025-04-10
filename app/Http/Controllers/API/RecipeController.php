@@ -16,7 +16,7 @@ class RecipeController extends BaseController
 
     public function index()
     {
-        $recipes = Recipe::all();
+        $recipes = Recipe::with(['tags', 'ingredients', 'nutritionInfo', 'user'])->get();
 
         // Add S3 URLs for recipe cover pictures
         foreach ($recipes as $recipe) {
@@ -26,6 +26,22 @@ class RecipeController extends BaseController
         }
 
         return $this->sendResponse($recipes, 'Recipes retrieved successfully.');
+    }
+
+    public function show($id)
+    {
+        try {
+            $recipe = Recipe::with(['tags', 'ingredients', 'nutritionInfo', 'user'])->findOrFail($id);
+
+            // Add S3 URL for recipe cover picture
+            if ($recipe->recipe_cover_picture) {
+                $recipe->recipe_cover_picture = $this->getS3Url($recipe->recipe_cover_picture);
+            }
+
+            return $this->sendResponse($recipe, 'Recipe retrieved successfully.');
+        } catch (\Exception $e) {
+            return $this->sendError('Recipe not found.', [], 404);
+        }
     }
 
     public function store(Request $request)
