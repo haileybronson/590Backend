@@ -6,6 +6,11 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
+
+    // protected function schedule(Schedule $schedule)
+    // {
+    //     $schedule->command('report:recipe-report --email=haileypbronson@gmail.com')->everyTenSeconds();
+    // }
     /**
      * The application's global HTTP middleware stack.
      *
