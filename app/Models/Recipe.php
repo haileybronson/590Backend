@@ -16,13 +16,31 @@ class Recipe extends Model
         'recipe_cover_picture',
         'inventory_total_qty',
         'checked_qty',
-        'user_id'
+        'user_id',
+        'is_vegan',
+        'is_vegetarian',
+        'is_gluten_free',
+        'is_dairy_free',
+        'is_nut_free',
+        'prep_time_minutes',
+        'cook_time_minutes',
+        'difficulty'
     ];
 
     protected $hidden = [
         'created_at',
         'updated_at',
         'deleted_at'
+    ];
+
+    protected $casts = [
+        'is_vegan' => 'boolean',
+        'is_vegetarian' => 'boolean',
+        'is_gluten_free' => 'boolean',
+        'is_dairy_free' => 'boolean',
+        'is_nut_free' => 'boolean',
+        'prep_time_minutes' => 'integer',
+        'cook_time_minutes' => 'integer'
     ];
 
     /**

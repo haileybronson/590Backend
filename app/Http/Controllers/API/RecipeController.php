@@ -58,7 +58,29 @@ class RecipeController extends BaseController
             $validator = \Validator::make($request->all(), [
                 'name' => 'required|string',
                 'description' => 'required|string',
-                'recipe_cover_picture' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:10240'
+                'recipe_cover_picture' => 'required|file|mimes:jpeg,png,jpg,gif,svg|max:10240',
+                'is_vegan' => 'nullable|boolean',
+                'is_vegetarian' => 'nullable|boolean',
+                'is_gluten_free' => 'nullable|boolean',
+                'is_dairy_free' => 'nullable|boolean',
+                'is_nut_free' => 'nullable|boolean',
+                'prep_time_minutes' => 'nullable|integer|min:0',
+                'cook_time_minutes' => 'nullable|integer|min:0',
+                'difficulty' => 'nullable|in:easy,medium,hard',
+                'tags' => 'nullable|array',
+                'tags.*' => 'exists:tags,id',
+                'ingredients' => 'nullable|array',
+                'ingredients.*.id' => 'required|exists:ingredients,id',
+                'ingredients.*.quantity' => 'nullable|numeric|min:0',
+                'ingredients.*.notes' => 'nullable|string',
+                'nutrition' => 'nullable|array',
+                'nutrition.calories' => 'nullable|integer|min:0',
+                'nutrition.protein' => 'nullable|numeric|min:0',
+                'nutrition.carbs' => 'nullable|numeric|min:0',
+                'nutrition.fat' => 'nullable|numeric|min:0',
+                'nutrition.fiber' => 'nullable|numeric|min:0',
+                'nutrition.sugar' => 'nullable|numeric|min:0',
+                'nutrition.notes' => 'nullable|string'
             ]);
 
             if ($validator->fails()) {
@@ -135,11 +157,47 @@ class RecipeController extends BaseController
                 'description' => $request->description,
                 'recipe_cover_picture' => $path,
                 'inventory_total_qty' => 1,
-                'checked_qty' => 0
+                'checked_qty' => 0,
+                'is_vegan' => $request->boolean('is_vegan', false),
+                'is_vegetarian' => $request->boolean('is_vegetarian', false),
+                'is_gluten_free' => $request->boolean('is_gluten_free', false),
+                'is_dairy_free' => $request->boolean('is_dairy_free', false),
+                'is_nut_free' => $request->boolean('is_nut_free', false),
+                'prep_time_minutes' => $request->prep_time_minutes,
+                'cook_time_minutes' => $request->cook_time_minutes,
+                'difficulty' => $request->difficulty,
+                'user_id' => auth()->id()
             ]);
+
+            // Attach tags if provided
+            if ($request->has('tags') && is_array($request->tags)) {
+                $recipe->tags()->sync($request->tags);
+            }
+
+            // Attach ingredients if provided
+            if ($request->has('ingredients') && is_array($request->ingredients)) {
+                $ingredientData = [];
+                foreach ($request->ingredients as $ingredient) {
+                    $ingredientData[$ingredient['id']] = [
+                        'quantity' => $ingredient['quantity'] ?? null,
+                        'notes' => $ingredient['notes'] ?? null
+                    ];
+                }
+                $recipe->ingredients()->sync($ingredientData);
+            }
+
+            // Create nutrition info if provided
+            if ($request->has('nutrition')) {
+                $nutritionData = $request->nutrition;
+                $nutritionData['recipe_id'] = $recipe->id;
+                $recipe->nutritionInfo()->create($nutritionData);
+            }
 
             // Add S3 URL for response
             $recipe->recipe_cover_picture = $this->getS3Url($path);
+
+            // Load relations for response
+            $recipe->load(['tags', 'ingredients', 'nutritionInfo']);
 
             return $this->sendResponse($recipe, 'Recipe created successfully.');
         } catch (\Exception $e) {
@@ -153,11 +211,37 @@ class RecipeController extends BaseController
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $validator = \Validator::make($request->all(), [
             'name' => 'required|string',
             'description' => 'required|string',
-            'recipe_cover_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240'
+            'recipe_cover_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10240',
+            'is_vegan' => 'nullable|boolean',
+            'is_vegetarian' => 'nullable|boolean',
+            'is_gluten_free' => 'nullable|boolean',
+            'is_dairy_free' => 'nullable|boolean',
+            'is_nut_free' => 'nullable|boolean',
+            'prep_time_minutes' => 'nullable|integer|min:0',
+            'cook_time_minutes' => 'nullable|integer|min:0',
+            'difficulty' => 'nullable|in:easy,medium,hard',
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id',
+            'ingredients' => 'nullable|array',
+            'ingredients.*.id' => 'required|exists:ingredients,id',
+            'ingredients.*.quantity' => 'nullable|numeric|min:0',
+            'ingredients.*.notes' => 'nullable|string',
+            'nutrition' => 'nullable|array',
+            'nutrition.calories' => 'nullable|integer|min:0',
+            'nutrition.protein' => 'nullable|numeric|min:0',
+            'nutrition.carbs' => 'nullable|numeric|min:0',
+            'nutrition.fat' => 'nullable|numeric|min:0',
+            'nutrition.fiber' => 'nullable|numeric|min:0',
+            'nutrition.sugar' => 'nullable|numeric|min:0',
+            'nutrition.notes' => 'nullable|string'
         ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Validation Error.', $validator->errors(), 422);
+        }
 
         try {
             $recipe = Recipe::findOrFail($id);
@@ -165,6 +249,14 @@ class RecipeController extends BaseController
             // Update basic info
             $recipe->name = $request->name;
             $recipe->description = $request->description;
+            $recipe->is_vegan = $request->boolean('is_vegan', $recipe->is_vegan);
+            $recipe->is_vegetarian = $request->boolean('is_vegetarian', $recipe->is_vegetarian);
+            $recipe->is_gluten_free = $request->boolean('is_gluten_free', $recipe->is_gluten_free);
+            $recipe->is_dairy_free = $request->boolean('is_dairy_free', $recipe->is_dairy_free);
+            $recipe->is_nut_free = $request->boolean('is_nut_free', $recipe->is_nut_free);
+            $recipe->prep_time_minutes = $request->has('prep_time_minutes') ? $request->prep_time_minutes : $recipe->prep_time_minutes;
+            $recipe->cook_time_minutes = $request->has('cook_time_minutes') ? $request->cook_time_minutes : $recipe->cook_time_minutes;
+            $recipe->difficulty = $request->has('difficulty') ? $request->difficulty : $recipe->difficulty;
 
             // Handle image update if provided
             if ($request->hasFile('recipe_cover_picture')) {
@@ -190,10 +282,41 @@ class RecipeController extends BaseController
 
             $recipe->save();
 
+            // Attach tags if provided
+            if ($request->has('tags')) {
+                $recipe->tags()->sync($request->tags);
+            }
+
+            // Attach ingredients if provided
+            if ($request->has('ingredients')) {
+                $ingredientData = [];
+                foreach ($request->ingredients as $ingredient) {
+                    $ingredientData[$ingredient['id']] = [
+                        'quantity' => $ingredient['quantity'] ?? null,
+                        'notes' => $ingredient['notes'] ?? null
+                    ];
+                }
+                $recipe->ingredients()->sync($ingredientData);
+            }
+
+            // Update nutrition info if provided
+            if ($request->has('nutrition')) {
+                if ($recipe->nutritionInfo) {
+                    $recipe->nutritionInfo->update($request->nutrition);
+                } else {
+                    $nutritionData = $request->nutrition;
+                    $nutritionData['recipe_id'] = $recipe->id;
+                    $recipe->nutritionInfo()->create($nutritionData);
+                }
+            }
+
             // Add S3 URL for response
             if ($recipe->recipe_cover_picture) {
                 $recipe->recipe_cover_picture = $this->getS3Url($recipe->recipe_cover_picture);
             }
+
+            // Load relations for response
+            $recipe->load(['tags', 'ingredients', 'nutritionInfo']);
 
             return $this->sendResponse($recipe, 'Recipe updated successfully.');
         } catch (\Exception $e) {

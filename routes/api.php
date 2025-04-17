@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\RegisterController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\RecipeController;
+use App\Http\Controllers\API\TagController;
+use App\Http\Controllers\API\IngredientController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -31,6 +33,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('recipes/{id}', 'destroy');
         Route::post('recipes/{id}/checkout', 'checkout');
         Route::post('recipes/{id}/return', 'return');
+    });
+
+    Route::controller(TagController::class)->group(function(){
+        Route::get('tags', 'index');
+        Route::get('tags/search', 'search');
+        Route::post('tags', 'store');
+        Route::put('tags/{id}', 'update');
+        Route::delete('tags/{id}', 'destroy');
+    });
+
+    Route::controller(IngredientController::class)->group(function(){
+        Route::get('ingredients', 'index');
+        Route::get('ingredients/search', 'search');
+        Route::post('ingredients', 'store');
+        Route::put('ingredients/{id}', 'update');
+        Route::delete('ingredients/{id}', 'destroy');
     });
 });
 
